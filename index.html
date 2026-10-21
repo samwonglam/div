@@ -6,6 +6,7 @@
     <title>小三數學互動引導：除法小偵探 (3.2)</title>
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts 圓體字型風格 -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
         body {
@@ -15,6 +16,7 @@
             overflow-x: hidden;
             touch-action: manipulation;
         }
+        /* 卡通立體按鈕與卡片 */
         .btn-3d {
             transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease;
             box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18);
@@ -23,359 +25,1199 @@
             transform: translateY(4px) scale(0.98);
             box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
         }
-        .card-cartoon { box-shadow: 0 10px 0 rgba(0, 0, 0, 0.1); }
+        .card-cartoon {
+            box-shadow: 0 10px 0 rgba(0, 0, 0, 0.1);
+        }
+        /* 動畫效果 */
         @keyframes float-slow {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             50% { transform: translateY(-7px) rotate(2deg); }
         }
-        .animate-float { animation: float-slow 2.6s infinite ease-in-out; }
+        .animate-float {
+            animation: float-slow 2.6s infinite ease-in-out;
+        }
         @keyframes wiggle {
             0%, 100% { transform: rotate(-4deg); }
             50% { transform: rotate(4deg); }
         }
-        .animate-wiggle { animation: wiggle 1.4s infinite ease-in-out; }
+        .animate-wiggle {
+            animation: wiggle 1.4s infinite ease-in-out;
+        }
         @keyframes pop-in {
             0% { transform: scale(0.5); opacity: 0; }
             80% { transform: scale(1.08); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
         }
-        .pop-in { animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .pop-in {
+            animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
         @keyframes shake-no {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-8px) rotate(-4deg); }
             40%, 80% { transform: translateX(8px) rotate(4deg); }
         }
-        .shake-no { animation: shake-no 0.45s ease-in-out; }
-        .pulse-glow { animation: pulse-glow 1.8s infinite; }
+        .shake-no {
+            animation: shake-no 0.45s ease-in-out;
+        }
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.7); }
             50% { box-shadow: 0 0 0 12px rgba(251, 146, 60, 0); }
         }
+        .pulse-glow {
+            animation: pulse-glow 1.8s infinite;
+        }
+        /* 可拖曳物件樣式 */
         .draggable-item {
-            cursor: grab; touch-action: none; user-select: none;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
             transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
+        .draggable-item:hover {
+            transform: scale(1.1) rotate(3deg);
+        }
         .draggable-item.dragging {
-            cursor: grabbing; z-index: 9999 !important;
+            cursor: grabbing;
+            z-index: 9999 !important;
             transform: scale(1.22) rotate(-5deg);
             filter: drop-shadow(0 14px 12px rgba(0,0,0,0.28));
+            transition: none !important;
+        }
+        .drop-zone {
+            transition: all 0.2s ease;
         }
         .drop-zone.drag-over {
-            transform: scale(1.05); background-color: #FEF9C3 !important;
-            border-color: #F59E0B !important; box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.4);
+            transform: scale(1.05);
+            background-color: #FEF9C3 !important;
+            border-color: #F59E0B !important;
+            box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.4);
         }
+        /* 紙花特效容器 */
         #confetti-canvas {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            pointer-events: none; z-index: 100;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
         }
-        /* 徽章灰階樣式 */
-        .badge-locked { filter: grayscale(100%) opacity(0.4); }
-        .badge-unlocked { filter: grayscale(0%) opacity(1); animation: pop-in 0.5s ease-out; }
     </style>
 </head>
 <body class="pb-14 text-slate-800 select-none">
 
+    <!-- 慶祝紙花 Canvas -->
     <canvas id="confetti-canvas"></canvas>
 
-    <!-- 頂部導航與徽章收集區 -->
+    <!-- 頂部卡通導航欄 -->
     <header class="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-500 text-white shadow-lg border-b-4 border-amber-600 sticky top-0 z-40">
-        <div class="max-w-5xl mx-auto px-3 py-2 flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-                <div class="w-10 h-10 bg-white rounded-2xl p-1 shadow border-2 border-amber-300 animate-float flex justify-center shrink-0">
-                    <svg viewBox="0 0 64 64" class="w-8 h-8"><circle cx="32" cy="36" r="18" fill="#FDE68A" stroke="#78350F" stroke-width="3"/><path d="M10 26 Q32 6 54 26 Z" fill="#D97706" stroke="#78350F" stroke-width="3"/><ellipse cx="32" cy="26" rx="26" ry="5" fill="#B45309" stroke="#78350F" stroke-width="3"/><circle cx="25" cy="36" r="3" fill="#1E293B"/><circle cx="39" cy="36" r="3" fill="#1E293B"/><path d="M25 44 Q32 50 39 44" fill="none" stroke="#78350F" stroke-width="3" stroke-linecap="round"/><circle cx="48" cy="44" r="9" fill="#E0F2FE" fill-opacity="0.85" stroke="#0284C7" stroke-width="3.5"/><line x1="54" y1="50" x2="61" y2="57" stroke="#78350F" stroke-width="4.5" stroke-linecap="round"/></svg>
+        <div class="max-w-5xl mx-auto px-3 py-2.5 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+                <!-- 卡通小偵探 SVG 頭像 -->
+                <div class="w-12 h-12 bg-white rounded-2xl p-1 shadow-md border-2 border-amber-300 animate-float flex items-center justify-center shrink-0">
+                    <svg viewBox="0 0 64 64" class="w-10 h-10">
+                        <circle cx="32" cy="36" r="18" fill="#FDE68A" stroke="#78350F" stroke-width="3"/>
+                        <!-- 偵探帽 -->
+                        <path d="M10 26 Q32 6 54 26 Z" fill="#D97706" stroke="#78350F" stroke-width="3"/>
+                        <ellipse cx="32" cy="26" rx="26" ry="5" fill="#B45309" stroke="#78350F" stroke-width="3"/>
+                        <!-- 眼睛與笑容 -->
+                        <circle cx="25" cy="36" r="3" fill="#1E293B"/>
+                        <circle cx="39" cy="36" r="3" fill="#1E293B"/>
+                        <path d="M25 44 Q32 50 39 44" fill="none" stroke="#78350F" stroke-width="3" stroke-linecap="round"/>
+                        <!-- 放大鏡 -->
+                        <circle cx="48" cy="44" r="9" fill="#E0F2FE" fill-opacity="0.85" stroke="#0284C7" stroke-width="3.5"/>
+                        <line x1="54" y1="50" x2="61" y2="57" stroke="#78350F" stroke-width="4.5" stroke-linecap="round"/>
+                    </svg>
                 </div>
                 <div>
-                    <h1 class="text-base md:text-xl font-black tracking-tight drop-shadow">除法小偵探 🕵️‍♂️</h1>
+                    <div class="text-[11px] md:text-xs font-bold text-amber-100 leading-none">香海正覺蓮社佛教正慧小學・P.3 數學</div>
+                    <h1 class="text-lg md:text-2xl font-black tracking-tight drop-shadow mt-0.5">除法小偵探 (3.2) 🕵️‍♂️</h1>
                 </div>
             </div>
-            
-            <!-- 徽章展示列 -->
-            <div class="flex gap-1.5 md:gap-3 items-center bg-black/20 px-3 py-1.5 rounded-full border border-white/30">
-                <span class="text-xs font-bold hidden sm:inline">偵探徽章：</span>
-                <div id="badge-1" class="text-xl md:text-2xl badge-locked" title="糖果大師">🍬</div>
-                <div id="badge-2" class="text-xl md:text-2xl badge-locked" title="精明買手">🖊️</div>
-                <div id="badge-3" class="text-xl md:text-2xl badge-locked" title="包裝達人">🥚</div>
-                <div id="badge-4" class="text-xl md:text-2xl badge-locked" title="體育管家">🏓</div>
-                <div id="badge-5" class="text-xl md:text-2xl badge-locked" title="水果店長">🍊</div>
+
+            <!-- 語音控制按鈕 -->
+            <div class="flex items-center gap-2">
+                <button onclick="speakCurrentQuestion()" class="btn-3d bg-white text-orange-600 font-black px-3 py-1.5 rounded-2xl text-xs md:text-sm flex items-center gap-1 border-2 border-amber-200">
+                    <span class="text-lg">🔊</span>
+                    <span class="hidden sm:inline">廣東話讀題</span>
+                </button>
+                <button onclick="stopSpeech()" title="停止朗讀" class="btn-3d bg-rose-600 hover:bg-rose-700 text-white font-black px-2.5 py-1.5 rounded-2xl text-xs border-2 border-rose-300">
+                    ⏹️
+                </button>
             </div>
-            
-            <button onclick="stopSpeech()" class="btn-3d bg-rose-600 hover:bg-rose-700 text-white font-black px-2 py-1 rounded-xl text-xs border-2 border-rose-300">⏹️ 停讀</button>
         </div>
     </header>
 
+    <!-- 主容器 -->
     <main class="max-w-5xl mx-auto px-3 md:px-5 mt-4 space-y-5">
-        
-        <!-- 工作紙強烈提示 -->
-        <div class="bg-rose-600 text-white font-black p-2 rounded-2xl text-center shadow-lg border-2 border-white animate-pulse flex items-center justify-center gap-2">
-            <span class="text-2xl">📝</span>
-            <span class="text-sm md:text-lg">請同時拿出工作紙！在對應位置寫出「橫式」、「直式」與「答句」！</span>
-        </div>
 
-        <nav class="grid grid-cols-5 gap-2 md:gap-3">
-            <button onclick="selectQuestion(1)" id="tab-1" class="btn-3d rounded-3xl py-2 px-1 font-black flex flex-col items-center border-4"><div class="text-3xl animate-wiggle">🍬</div><span class="text-xs mt-0.5">第 1 題</span></button>
-            <button onclick="selectQuestion(2)" id="tab-2" class="btn-3d rounded-3xl py-2 px-1 font-black flex flex-col items-center border-4"><div class="text-3xl animate-wiggle">🖊️</div><span class="text-xs mt-0.5">第 2 題</span></button>
-            <button onclick="selectQuestion(3)" id="tab-3" class="btn-3d rounded-3xl py-2 px-1 font-black flex flex-col items-center border-4"><div class="text-3xl animate-wiggle">🥚</div><span class="text-xs mt-0.5">第 3 題</span></button>
-            <button onclick="selectQuestion(4)" id="tab-4" class="btn-3d rounded-3xl py-2 px-1 font-black flex flex-col items-center border-4"><div class="text-3xl animate-wiggle">🏓</div><span class="text-xs mt-0.5">第 4 題</span></button>
-            <button onclick="selectQuestion(5)" id="tab-5" class="btn-3d rounded-3xl py-2 px-1 font-black flex flex-col items-center border-4"><div class="text-3xl animate-wiggle">🍊</div><span class="text-xs mt-0.5">第 5 題</span></button>
+        <!-- 5 題卡通圖案選擇卡 -->
+        <nav class="grid grid-cols-5 gap-2 md:gap-3" aria-label="題目選擇">
+            <button onclick="selectQuestion(1)" id="tab-1" class="btn-3d rounded-3xl py-2.5 px-1 font-black flex flex-col items-center justify-center border-4 transition-all">
+                <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-3xl md:text-4xl animate-wiggle">🍬</div>
+                <span class="text-xs md:text-base mt-0.5">第 1 題</span>
+                <span id="star-1" class="text-[11px] px-2 py-0.5 rounded-full bg-white/60 text-slate-700 mt-0.5">分糖果</span>
+            </button>
+            <button onclick="selectQuestion(2)" id="tab-2" class="btn-3d rounded-3xl py-2.5 px-1 font-black flex flex-col items-center justify-center border-4 transition-all">
+                <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-3xl md:text-4xl animate-wiggle">🖊️</div>
+                <span class="text-xs md:text-base mt-0.5">第 2 題</span>
+                <span id="star-2" class="text-[11px] px-2 py-0.5 rounded-full bg-white/60 text-slate-700 mt-0.5">買原子筆</span>
+            </button>
+            <button onclick="selectQuestion(3)" id="tab-3" class="btn-3d rounded-3xl py-2.5 px-1 font-black flex flex-col items-center justify-center border-4 transition-all">
+                <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-3xl md:text-4xl animate-wiggle">🥚</div>
+                <span class="text-xs md:text-base mt-0.5">第 3 題</span>
+                <span id="star-3" class="text-[11px] px-2 py-0.5 rounded-full bg-white/60 text-slate-700 mt-0.5">裝雞蛋</span>
+            </button>
+            <button onclick="selectQuestion(4)" id="tab-4" class="btn-3d rounded-3xl py-2.5 px-1 font-black flex flex-col items-center justify-center border-4 transition-all">
+                <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-3xl md:text-4xl animate-wiggle">🏓</div>
+                <span class="text-xs md:text-base mt-0.5">第 4 題</span>
+                <span id="star-4" class="text-[11px] px-2 py-0.5 rounded-full bg-white/60 text-slate-700 mt-0.5">乒乓球</span>
+            </button>
+            <button onclick="selectQuestion(5)" id="tab-5" class="btn-3d rounded-3xl py-2.5 px-1 font-black flex flex-col items-center justify-center border-4 transition-all">
+                <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-3xl md:text-4xl animate-wiggle">🍊</div>
+                <span class="text-xs md:text-base mt-0.5">第 5 題</span>
+                <span id="star-5" class="text-[11px] px-2 py-0.5 rounded-full bg-white/60 text-slate-700 mt-0.5">包裝橙</span>
+            </button>
         </nav>
 
-        <section class="bg-white rounded-3xl p-4 card-cartoon border-4 border-sky-400">
-            <div class="flex flex-col sm:flex-row justify-between gap-3">
-                <div class="flex items-center gap-3">
-                    <div id="q-badge" class="bg-sky-500 text-white font-black text-base px-3 py-1 rounded-2xl shadow">第 1 題</div>
-                    <div id="question-text-box" class="text-lg font-black text-slate-800 leading-snug"></div>
+        <!-- 題目故事大圖卡 (大字 + 廣東話大喇叭) -->
+        <section class="bg-white rounded-3xl p-4 md:p-5 card-cartoon border-4 border-sky-400 relative overflow-hidden">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <div id="q-badge" class="bg-sky-500 text-white font-black text-base md:text-lg px-3.5 py-1.5 rounded-2xl shrink-0 shadow">
+                        第 1 題
+                    </div>
+                    <div id="question-text-box" class="text-lg md:text-xl font-black text-slate-800 leading-snug">
+                        <!-- 動態載入題目 -->
+                    </div>
                 </div>
-                <button onclick="speakCurrentQuestion()" class="btn-3d pulse-glow bg-amber-500 text-white font-black px-4 py-2 rounded-2xl flex items-center gap-2 border-2 border-amber-200">🔊 聽題目</button>
+                <button onclick="speakCurrentQuestion()" class="btn-3d pulse-glow bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black px-5 py-3 rounded-2xl flex items-center gap-2 shrink-0 text-base md:text-lg border-2 border-amber-200 w-full sm:w-auto justify-center">
+                    <span class="text-2xl">🔊</span>
+                    <span>聽題目</span>
+                </button>
             </div>
         </section>
 
-        <!-- 步驟 1：三級漸進式拉動區 -->
-        <section class="bg-white rounded-3xl p-4 card-cartoon border-4 border-purple-400 relative">
-            <div class="flex flex-wrap items-center justify-between mb-3">
+        <!-- 步驟 1：動手拉動分物遊樂場 (Interactive Drag & Drop Stage) -->
+        <section class="bg-white rounded-3xl p-4 md:p-6 card-cartoon border-4 border-purple-400 relative">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <div class="flex items-center gap-2">
-                    <span class="bg-purple-600 text-white font-black px-3 py-1 rounded-xl shadow">步驟 1</span>
-                    <h2 class="text-lg font-black text-purple-800">✋ 偵探實驗室</h2>
+                    <span class="bg-purple-600 text-white font-black px-3 py-1 rounded-xl text-sm md:text-base shadow">步驟 1</span>
+                    <h2 class="text-base md:text-xl font-black text-purple-800 flex items-center gap-1.5">
+                        <span>✋</span> 用手指拉動圖畫分分看！
+                    </h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="speakStageGuide()" class="btn-3d bg-purple-100 hover:bg-purple-200 text-purple-800 font-black px-3 py-1.5 rounded-xl text-xs md:text-sm flex items-center gap-1 border border-purple-300">
+                        <span>🔊</span> 玩法提示
+                    </button>
+                    <button onclick="resetStage()" class="btn-3d bg-slate-100 hover:bg-slate-200 text-slate-700 font-black px-3 py-1.5 rounded-xl text-xs md:text-sm flex items-center gap-1 border border-slate-300">
+                        <span>🔄</span> 再玩一次
+                    </button>
                 </div>
             </div>
 
-            <div id="interactive-stage" class="bg-gradient-to-b from-purple-50 to-indigo-50 rounded-3xl p-4 border-2 border-dashed border-purple-300 min-h-[290px] relative">
-                <!-- Level 1 預設思考畫面與 Level 2 解鎖將由 JS 注入 -->
+            <!-- 互動畫布區 -->
+            <div id="interactive-stage" class="bg-gradient-to-b from-purple-50/80 to-indigo-50/60 rounded-3xl p-4 md:p-5 border-2 border-dashed border-purple-300 min-h-[290px] flex flex-col justify-between relative overflow-hidden">
+                <!-- 由 JS 根據題目動態生成 SVG 與拖放元素 -->
             </div>
         </section>
 
+        <!-- 步驟 2 & 3：雙欄圖象闖關 (左：列式拼圖，右：答題處理圖卡) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <!-- 步驟 2 -->
-            <section class="bg-white rounded-3xl p-4 card-cartoon border-4 border-emerald-400">
-                <div class="flex gap-2 mb-3"><span class="bg-emerald-600 text-white font-black px-3 py-1 rounded-xl text-sm shadow">步驟 2</span><h2 class="font-black text-emerald-800">🧩 揀啱「除數」</h2></div>
-                <div id="equation-board" class="bg-emerald-50 border-3 border-emerald-300 rounded-2xl p-4 text-center my-2"></div>
-                <div id="divisor-choices" class="grid grid-cols-3 gap-2 mt-3"></div>
+
+            <!-- 步驟 2：橫式密碼鎖 -->
+            <section class="bg-white rounded-3xl p-4 md:p-5 card-cartoon border-4 border-emerald-400 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-emerald-600 text-white font-black px-3 py-1 rounded-xl text-sm shadow">步驟 2</span>
+                            <h2 class="text-base md:text-lg font-black text-emerald-800">🧩 揀啱「除數」列橫式</h2>
+                        </div>
+                        <button onclick="speakDivisorPrompt()" class="btn-3d bg-emerald-100 text-emerald-800 font-black px-2.5 py-1 rounded-xl text-xs border border-emerald-300">
+                            🔊 聽提示
+                        </button>
+                    </div>
+
+                    <!-- 大型算式展示牌 (不顯示答案) -->
+                    <div id="equation-board" class="bg-emerald-50 border-3 border-emerald-300 rounded-2xl p-4 text-center my-2">
+                        <!-- JS 動態載入 -->
+                    </div>
+                </div>
+
+                <!-- 除數選擇按鈕 -->
+                <div id="divisor-choices" class="grid grid-cols-3 gap-2.5 mt-3">
+                    <!-- JS 動態載入 -->
+                </div>
                 <div id="divisor-feedback" class="hidden mt-3 p-3 rounded-2xl font-black text-sm text-center"></div>
             </section>
 
-            <!-- 步驟 3 -->
-            <section class="bg-white rounded-3xl p-4 card-cartoon border-4 border-amber-400">
-                <div class="flex gap-2 mb-3"><span class="bg-amber-500 text-white font-black px-3 py-1 rounded-xl text-sm shadow">步驟 3</span><h2 class="font-black text-amber-900">☑️ 工作紙剔邊格？</h2></div>
-                <div id="handling-options" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+            <!-- 步驟 3：工作紙「答題處理」五選一圖像卡 -->
+            <section class="bg-white rounded-3xl p-4 md:p-5 card-cartoon border-4 border-amber-400 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-amber-500 text-white font-black px-3 py-1 rounded-xl text-sm shadow">步驟 3</span>
+                            <h2 class="text-base md:text-lg font-black text-amber-900">☑️ 工作紙「答題處理」剔邊格？</h2>
+                        </div>
+                        <button onclick="speakText('睇下剛剛拉動圖畫嘅結果，工作紙上面嘅答題處理應該剔邊一格呢？')" class="btn-3d bg-amber-100 text-amber-900 font-black px-2.5 py-1 rounded-xl text-xs border border-amber-300">
+                            🔊 聽提示
+                        </button>
+                    </div>
+
+                    <!-- 5 個與工作紙完全一致的選項（配圖示） -->
+                    <div id="handling-options" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <!-- JS 動態載入 -->
+                    </div>
+                </div>
                 <div id="handling-feedback" class="hidden mt-3 p-3 rounded-2xl font-black text-sm text-center"></div>
             </section>
+
         </div>
+
+        <!-- 步驟 4：工作紙小偵探過關印章卡 (極簡圖示版) -->
+        <section class="bg-gradient-to-r from-amber-100 via-yellow-100 to-orange-100 rounded-3xl p-4 md:p-5 card-cartoon border-4 border-amber-500">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="text-4xl animate-bounce">📝</div>
+                    <div>
+                        <h3 class="text-base md:text-lg font-black text-amber-950">最後一步：自己喺工作紙寫低答案！（撳下面4個印章過關）</h3>
+                        <p id="worksheet-extra-tip" class="text-xs md:text-sm font-black text-rose-600 mt-0.5"></p>
+                    </div>
+                </div>
+
+                <!-- 4 個大圖示打卡按鈕 -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full md:w-auto">
+                    <button onclick="toggleStamp(0)" id="stamp-0" class="btn-3d bg-white border-2 border-amber-400 rounded-2xl p-2.5 flex flex-col items-center justify-center text-slate-700 font-black text-xs">
+                        <span class="text-2xl mb-0.5">☑️</span>
+                        <span>1. 剔好處理</span>
+                    </button>
+                    <button onclick="toggleStamp(1)" id="stamp-1" class="btn-3d bg-white border-2 border-amber-400 rounded-2xl p-2.5 flex flex-col items-center justify-center text-slate-700 font-black text-xs">
+                        <span class="text-2xl mb-0.5">➗</span>
+                        <span>2. 寫好橫式</span>
+                    </button>
+                    <button onclick="toggleStamp(2)" id="stamp-2" class="btn-3d bg-white border-2 border-amber-400 rounded-2xl p-2.5 flex flex-col items-center justify-center text-slate-700 font-black text-xs">
+                        <span class="text-2xl mb-0.5">✏️</span>
+                        <span>3. 計好直式</span>
+                    </button>
+                    <button onclick="toggleStamp(3)" id="stamp-3" class="btn-3d bg-white border-2 border-amber-400 rounded-2xl p-2.5 flex flex-col items-center justify-center text-slate-700 font-black text-xs">
+                        <span class="text-2xl mb-0.5">💬</span>
+                        <span>4. 寫埋答句</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <script>
-        // 音效引擎
+        // ==========================================
+        // 1. 音效合成器 (Web Audio API - 卡通音效)
+        // ==========================================
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
+
         function playSound(type) {
             try {
                 if (!audioCtx) audioCtx = new AudioCtx();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 const now = audioCtx.currentTime;
-                // (省略部分波形建立，保留核心聲音邏輯，參見原碼，此處簡化示意)
-                const osc = audioCtx.createOscillator();
-                osc.connect(audioCtx.destination);
-                osc.start(); osc.stop(now + 0.1);
+
+                if (type === 'pickup') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(580, now + 0.08);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+                    osc.start(now); osc.stop(now + 0.09);
+                } else if (type === 'drop') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(520, now);
+                    osc.frequency.exponentialRampToValueAtTime(760, now + 0.11);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+                    osc.start(now); osc.stop(now + 0.12);
+                } else if (type === 'correct') {
+                    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain); gain.connect(audioCtx.destination);
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(f, now + i * 0.08);
+                        gain.gain.setValueAtTime(0.22, now + i * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.25);
+                        osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.25);
+                    });
+                } else if (type === 'wrong') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.linearRampToValueAtTime(150, now + 0.25);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+                    osc.start(now); osc.stop(now + 0.28);
+                }
             } catch (e) {}
         }
+
+        // ==========================================
+        // 2. 廣東話語音導航 (Web Speech API)
+        // ==========================================
+        let cantoneseVoice = null;
+
+        function initVoices() {
+            if (!('speechSynthesis' in window)) return;
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                cantoneseVoice = voices.find(v => v.lang.toLowerCase().includes('zh-hk') || v.lang.toLowerCase().includes('yue'))
+                              || voices.find(v => v.name.toLowerCase().includes('hong kong') || v.name.toLowerCase().includes('cantonese') || v.name.includes('粵'))
+                              || voices.find(v => v.lang.toLowerCase().includes('zh'));
+            }
+        }
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = initVoices;
+            setTimeout(initVoices, 250);
+        }
+
+        function stopSpeech() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+
         function speakText(text) {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(text);
+            if (!cantoneseVoice) initVoices();
+            if (cantoneseVoice) u.voice = cantoneseVoice;
             u.lang = 'zh-HK';
+            u.rate = 0.92;
+            u.pitch = 1.06;
             window.speechSynthesis.speak(u);
         }
 
-        // 資料結構 - 擴展了元認知反思 (Metacognition) 與偵探鷹架提示 (Level 3 Scaffolding)
+        // ==========================================
+        // 3. 通用手勢拖放引擎 (支援滑鼠、iPad觸控及點擊自動移動)
+        // ==========================================
+        function makeDraggable(el, onDropCallback) {
+            let startX = 0, startY = 0;
+            let isDragging = false;
+            let moved = false;
+
+            el.addEventListener('pointerdown', (e) => {
+                if (el.dataset.locked === 'true') return;
+                e.preventDefault();
+                el.setPointerCapture(e.pointerId);
+                playSound('pickup');
+                startX = e.clientX;
+                startY = e.clientY;
+                isDragging = true;
+                moved = false;
+                el.classList.add('dragging');
+            });
+
+            el.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+                el.style.transform = `translate(${dx}px, ${dy}px) scale(1.18)`;
+
+                // 偵測下方 Drop Zone 高亮
+                el.style.pointerEvents = 'none';
+                const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+                el.style.pointerEvents = 'auto';
+                const dropZone = elemBelow ? elemBelow.closest('.drop-zone') : null;
+
+                document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+                if (dropZone) dropZone.classList.add('drag-over');
+            });
+
+            el.addEventListener('pointerup', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                el.classList.remove('dragging');
+                document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+
+                el.style.pointerEvents = 'none';
+                const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+                el.style.pointerEvents = 'auto';
+                const dropZone = elemBelow ? elemBelow.closest('.drop-zone') : null;
+
+                el.style.transform = '';
+
+                if (dropZone) {
+                    onDropCallback(el, dropZone);
+                } else if (!moved) {
+                    // 若學生只是輕按一下，貼心支援自動移去可用目標
+                    onDropCallback(el, null);
+                }
+            });
+        }
+
+        // ==========================================
+        // 4. 生動卡通 SVG 圖庫產生器
+        // ==========================================
+        function getKidSvg(type, mood = 'happy') {
+            const colors = {
+                me: { hair: '#451A03', shirt: '#38BDF8',cheek: '#FDA4AF' },
+                bro: { hair: '#1E293B', shirt: '#4ADE80', cheek: '#FDA4AF' },
+                sis: { hair: '#7C2D12', shirt: '#F472B6', cheek: '#FDA4AF' }
+            }[type];
+
+            const mouth = mood === 'excited'
+                ? `<path d="M22 40 Q32 52 42 40 Z" fill="#EF4444" stroke="#78350F" stroke-width="2"/>`
+                : `<path d="M24 41 Q32 48 40 41" fill="none" stroke="#78350F" stroke-width="3" stroke-linecap="round"/>`;
+
+            const pigtails = type === 'sis'
+                ? `<circle cx="10" cy="26" r="7" fill="${colors.hair}"/><circle cx="54" cy="26" r="7" fill="${colors.hair}"/>`
+                : '';
+
+            return `
+            <svg viewBox="0 0 64 64" class="w-16 h-16 md:w-20 md:h-20 drop-shadow">
+                ${pigtails}
+                <path d="M16 58 Q32 46 48 58" fill="${colors.shirt}" stroke="#1E293B" stroke-width="3"/>
+                <circle cx="32" cy="32" r="18" fill="#FDE68A" stroke="#78350F" stroke-width="3"/>
+                <path d="M14 28 Q32 10 50 28 Q40 18 24 22 Z" fill="${colors.hair}"/>
+                <circle cx="25" cy="33" r="2.8" fill="#1E293B"/>
+                <circle cx="39" cy="33" r="2.8" fill="#1E293B"/>
+                <circle cx="20" cy="38" r="3.2" fill="${colors.cheek}" opacity="0.7"/>
+                <circle cx="44" cy="38" r="3.2" fill="${colors.cheek}" opacity="0.7"/>
+                ${mouth}
+            </svg>`;
+        }
+
+        function getCandySvg() {
+            return `
+            <svg viewBox="0 0 56 40" class="w-12 h-10 md:w-14 md:h-11 drop-shadow">
+                <polygon points="4,10 16,20 4,30" fill="#F43F5E" stroke="#881337" stroke-width="2.5" stroke-linejoin="round"/>
+                <polygon points="52,10 40,20 52,30" fill="#F43F5E" stroke="#881337" stroke-width="2.5" stroke-linejoin="round"/>
+                <circle cx="28" cy="20" r="13" fill="#FB7185" stroke="#881337" stroke-width="2.5"/>
+                <path d="M22 13 Q28 20 22 27" fill="none" stroke="#FFE4E6" stroke-width="3" stroke-linecap="round"/>
+                <path d="M32 13 Q38 20 32 27" fill="none" stroke="#FEF08A" stroke-width="3" stroke-linecap="round"/>
+            </svg>`;
+        }
+
+        function getPenSvg() {
+            return `
+            <svg viewBox="0 0 64 64" class="w-11 h-11 md:w-13 md:h-13 drop-shadow">
+                <g transform="rotate(-35 32 32)">
+                    <rect x="25" y="8" width="14" height="38" rx="4" fill="#3B82F6" stroke="#1E3A8A" stroke-width="2.5"/>
+                    <rect x="25" y="14" width="14" height="6" fill="#FDE047" stroke="#1E3A8A" stroke-width="2"/>
+                    <polygon points="25,46 39,46 32,58" fill="#FDE68A" stroke="#1E3A8A" stroke-width="2.5"/>
+                    <polygon points="30,54 34,54 32,58" fill="#1E293B"/>
+                    <path d="M39 14 L44 14 L44 30" fill="none" stroke="#1E3A8A" stroke-width="2.5" stroke-linecap="round"/>
+                </g>
+            </svg>`;
+        }
+
+        // ==========================================
+        // 5. 題庫與資料設定 (絕不洩露計算結果)
+        // ==========================================
         const handlingChoices = [
-            { id: 'both', label: '「商」及「餘數」', icon: '🎁+🍬' },
+            { id: 'both', label: '「商」及「餘數」', icon: '🎁 + 🍬' },
             { id: 'quotient', label: '只要「商」', icon: '🎯' },
-            { id: 'q_plus_1', label: '「商」+ 1', icon: '📦+1️⃣' },
-            { id: 'q_plus_r', label: '「商」+「餘數」', icon: '🧺+🏓' },
-            { id: 'd_minus_r', label: '「除數」-「餘數」', icon: '7️⃣-🍊' }
+            { id: 'q_plus_1', label: '「商」+ 1', icon: '📦 + 1️⃣' },
+            { id: 'q_plus_r', label: '「商」+「餘數」', icon: '🧺 + 🏓' },
+            { id: 'd_minus_r', label: '「除數」-「餘數」', icon: '7️⃣ - 🍊' }
         ];
 
         const questions = {
             1: {
-                titleHtml: '媽媽把糖果 <span class="text-rose-600 underline">65粒</span> 平均分給 <span class="bg-amber-200 px-2 rounded-xl text-amber-950">我、哥哥和妹妹</span>，每人分得幾粒？餘下幾粒？',
+                titleHtml: '媽媽把糖果 <span class="text-rose-600 underline">65粒</span> 平均分給 <span class="bg-amber-200 px-2 py-0.5 rounded-xl text-amber-950">我、哥哥和妹妹</span>，每人可分得糖果多少粒？餘下多少粒？',
                 readText: '第一題：媽媽把糖果65粒，平均分給我、哥哥和妹妹，每人可分得糖果多少粒？餘下多少粒？',
-                level1Prompt: '🤔 偵探思考題：請仔細數一數，題目中總共有「幾個小朋友」要分糖果？',
-                dividend: 65, correctDivisor: 3,
+                stageGuide: '試下用手指將碟上面嘅糖果，一粒一粒拉俾「我」、「哥哥」同「妹妹」3個人，睇下每人分得一樣多之後，仲有冇糖果餘下？',
+                dividend: 65,
+                correctDivisor: 3,
                 divisorOptions: [
-                    { val: 2, text: '÷ 2', hint: '🕵️‍♂️ 偵探溫馨提示：你有沒有數漏了「我」自己？試下重新數數有幾個人！' },
-                    { val: 3, text: '÷ 3', hint: '🌟 答對！「我、哥哥和妹妹」一共是 3 個人！' },
-                    { val: 4, text: '÷ 4', hint: '🕵️‍♂️ 偵探溫馨提示：媽媽是分糖果的人，她自己不用分喔！' }
+                    { val: 2, text: '÷ 2 (人)', hint: '唔好漏咗「我」自己呀！數下上面有幾多個小朋友？' },
+                    { val: 3, text: '÷ 3 (人)', hint: '啱晒！「我、哥哥和妹妹」一共係 3 個人！' },
+                    { val: 4, text: '÷ 4 (人)', hint: '媽媽係分糖果嘅人，上面只有 3 個小朋友分糖果咋！' }
                 ],
+                equationTemplate: '65 ÷ <span id="eq-div-slot" class="px-2 py-0.5 bg-amber-200 rounded-lg text-rose-600">？</span> ＝ <span class="text-emerald-700">？(粒)</span> ... <span class="text-rose-600">？(粒)</span>',
                 correctHandling: 'both',
-                handlingFeedback: '✅ 答啱！',
-                metaReflection: '🧠 偵探反思：點解要剔「商及餘數」？因為除咗要知道每人分幾多（商），仲要知道最後剩低幾多粒（餘數），呢兩組數字都係答案嘅重要部分！',
-                eqStr: '65 ÷ <span id="eq-div" class="text-rose-600">？</span> ＝ ?(粒)...?(粒)'
+                handlingFeedback: '答啱喇！題目問「每人可分得多少粒（商）」同埋「餘下多少粒（餘數）」，所以剔「商」及「餘數」！',
+                extraTip: '💡 橫式記得寫埋「商」同「餘數」嘅單位（粒）呀！'
             },
             2: {
-                titleHtml: '每枝原子筆 <span class="text-rose-600 underline">5元</span>，子明有 <span class="text-sky-600 underline">84元</span>，他最多可買多少枝？',
-                readText: '第二題：每枝原子筆5元，子明有84元，最多可買原子筆多少枝？',
-                level1Prompt: '🤔 偵探思考題：想一想，每買一枝筆需要扣除多少元？餘下的錢如果不夠買一枝，老闆會賣給你嗎？',
-                dividend: 84, correctDivisor: 5,
+                titleHtml: '每枝原子筆售 <span class="text-rose-600 underline">5元</span>，子明有 <span class="text-sky-600 underline">84元</span>，他<span class="bg-amber-200 px-2 py-0.5 rounded-xl text-amber-950">最多可買</span>原子筆多少枝？',
+                readText: '第二題：每枝原子筆售5元，子明有84元，他最多可買原子筆多少枝？',
+                stageGuide: '將銀包入面嘅 5元硬幣 拉去文具店買原子筆！再試下將剩低嗰幾個 1元硬幣 拉去買筆，睇下老闆點講？',
+                dividend: 84,
+                correctDivisor: 5,
                 divisorOptions: [
-                    { val: 4, text: '÷ 4', hint: '🕵️‍♂️ 偵探溫馨提示：看看題目，每枝原子筆的標價是多少元？' },
-                    { val: 5, text: '÷ 5', hint: '🌟 正確！每 5 元買 1 枝筆！' },
-                    { val: 10, text: '÷ 10', hint: '🕵️‍♂️ 偵探溫馨提示：一枝筆只需要 5 元喔！' }
+                    { val: 5, text: '÷ 5 (元)', hint: '完全正確！每 5 元買 1 枝筆，所以用 84 ÷ 5！' },
+                    { val: 4, text: '÷ 4 (元)', hint: '題目話每枝原子筆售 5 元，唔係 4 元呀！' },
+                    { val: 10, text: '÷ 10 (元)', hint: '每枝原子筆係 5 元，所以除數係 5！' }
                 ],
+                equationTemplate: '84 ÷ <span id="eq-div-slot" class="px-2 py-0.5 bg-amber-200 rounded-lg text-rose-600">？</span> ＝ <span class="text-emerald-700">？(枝)</span> ... <span class="text-rose-600">？(元)</span>',
                 correctHandling: 'quotient',
-                handlingFeedback: '✅ 答啱！',
-                metaReflection: '🧠 偵探反思：點解只要「商」？因為剩低嘅錢少過 5 元，唔夠錢買多一枝，所以餘數對於「最多買幾枝」冇幫助，捨棄餘數就得！',
-                eqStr: '84 ÷ <span id="eq-div" class="text-rose-600">？</span> ＝ ?(枝)...?(元)'
+                handlingFeedback: '太醒目喇！餘下嘅錢少過 5 元，唔夠買多一枝筆，所以剔「只要商」！',
+                extraTip: '💡 餘下嘅錢買唔到筆，所以答句只需要寫「商」嗰個數字（最多可買多少枝）！'
             },
-            // 題3, 4, 5 (結構同上，此處略縮以符要求，但實際部署會全寫)
             3: {
-                titleHtml: '每盒放雞蛋<span class="bg-amber-200 px-2 rounded-xl text-amber-950">半打</span>，雞蛋 <span class="text-rose-600 underline">92隻</span>，最少要盒子多少個？',
-                readText: '最少要盒子多少個才可擺放所有雞蛋？',
-                level1Prompt: '🤔 偵探思考題：你知道「半打」是多少嗎？如果有雞蛋裝不滿一盒，可以隨便丟掉嗎？',
-                dividend: 92, correctDivisor: 6,
+                titleHtml: '每個盒子可放雞蛋<span class="bg-amber-200 px-2 py-0.5 rounded-xl text-amber-950">半打</span>，現有雞蛋 <span class="text-rose-600 underline">92隻</span>，<span class="text-purple-700 underline">最少要盒子多少個才可擺放所有雞蛋</span>？',
+                readText: '第三題：每個盒子可放雞蛋半打，現有雞蛋92隻，最少要盒子多少個才可擺放所有雞蛋？',
+                stageGuide: '將雞蛋拉入去「半打」雞蛋盒入面！裝滿 6 隻之後，仲有餘下嘅雞蛋喎，快啲拉多 1 個新盒子落嚟裝起佢哋啦！',
+                dividend: 92,
+                correctDivisor: 6,
                 divisorOptions: [
-                    { val: 6, text: '÷ 6', hint: '🌟 正確！一打12隻，半打就是6隻！' },
-                    { val: 12, text: '÷ 12', hint: '🕵️‍♂️ 偵探提示：12隻是「一打」，題目寫的是「半打」喔！' },
-                    { val: 5, text: '÷ 5', hint: '🕵️‍♂️ 偵探提示：半打等於 6 隻！' }
+                    { val: 5, text: '÷ 5 (隻)', hint: '數下個雞蛋盒，「半打」有 6 格，唔係 5 隻呀！' },
+                    { val: 6, text: '÷ 6 (隻)', hint: 'Bingo！一打有 12 隻，所以「半打」即係 6 隻！' },
+                    { val: 12, text: '÷ 12 (隻)', hint: '12 隻係「一打」，題目講緊「半打」喎！' }
                 ],
-                correctHandling: 'q_plus_1', handlingFeedback: '✅ 答啱！',
-                metaReflection: '🧠 偵探反思：點解要「商 + 1」？因為「商」只係裝滿嘅盒子數量，而剩低嘅雞蛋都需要一個家，所以要攞多 1 個新盒子裝起佢哋！',
-                eqStr: '92 ÷ <span id="eq-div" class="text-rose-600">？</span> ＝ ?(個)...?(隻)'
+                equationTemplate: '92 ÷ <span id="eq-div-slot" class="px-2 py-0.5 bg-amber-200 rounded-lg text-rose-600">？</span> ＝ <span class="text-emerald-700">？(個)</span> ... <span class="text-rose-600">？(隻)</span>',
+                correctHandling: 'q_plus_1',
+                handlingFeedback: '啱晒！為咗擺放「所有」雞蛋，餘下嘅雞蛋都要用多 1 個盒裝，所以剔「商 + 1」！',
+                extraTip: '⚠️ 記得喺工作紙寫埋第 2 步橫式：（商）＋ 1 ＝ ？（個）！'
             },
             4: {
-                titleHtml: '乒乓球 <span class="text-rose-600 underline">98個</span>，平均放於8個籃，剩餘的再放於其中一籃，這籃共有多少個？',
-                readText: '剩餘的乒乓球再放於其中一個籃子內，這個籃子共有乒乓球多少個？',
-                level1Prompt: '🤔 偵探思考題：其中一個籃子本身已經裝了球，把剩下來的球再丟進去，數量會變多還是變少？',
-                dividend: 98, correctDivisor: 8,
+                titleHtml: '有乒乓球 <span class="text-rose-600 underline">98個</span>，平均放於 <span class="text-sky-600 underline">8個</span> 籃子中，<span class="bg-amber-200 px-2 py-0.5 rounded-xl text-amber-950">剩餘的乒乓球再放於其中一個籃子內</span>，這個籃子共有乒乓球多少個？',
+                readText: '第四題：有乒乓球98個，平均放於8個籃子中，剩餘的乒乓球再放於其中一個籃子內，這個籃子共有乒乓球多少個？',
+                stageGuide: '8 個籃子入面已經平均分咗「商」咁多個乒乓球。請用手指將地下「剩餘嘅乒乓球」全部拉入去金色星星籃子入面啦！',
+                dividend: 98,
+                correctDivisor: 8,
                 divisorOptions: [
-                    { val: 8, text: '÷ 8', hint: '🌟 答啱！' }, { val: 9, text: '÷ 9', hint: '提示：只有8個籃子！' }, { val: 6, text: '÷ 6', hint: '提示：題目寫著8個籃子。' }
+                    { val: 6, text: '÷ 6 (個)', hint: '題目話平均放於 8 個籃子中，唔係 6 個呀！' },
+                    { val: 8, text: '÷ 8 (個)', hint: '答啱喇！平均放於 8 個籃子，除數係 8！' },
+                    { val: 9, text: '÷ 9 (個)', hint: '睇真啲題目，只有 8 個籃子咋！' }
                 ],
-                correctHandling: 'q_plus_r', handlingFeedback: '✅ 答啱！',
-                metaReflection: '🧠 偵探反思：點解係「商 + 餘數」？因為個籃本身分到「商」咁多個球，加上最後剩低（餘數）嘅球放埋入去，加埋就係答案啦！',
-                eqStr: '98 ÷ <span id="eq-div" class="text-rose-600">？</span> ＝ ?(個)...?(個)'
+                equationTemplate: '98 ÷ <span id="eq-div-slot" class="px-2 py-0.5 bg-amber-200 rounded-lg text-rose-600">？</span> ＝ <span class="text-emerald-700">？(個)</span> ... <span class="text-rose-600">？(個)</span>',
+                correctHandling: 'q_plus_r',
+                handlingFeedback: '完全正確！星星籃子有原本分到嘅「商」個波，再加埋放落去嘅「餘數」個波，所以係「商 + 餘數」！',
+                extraTip: '⚠️ 記得喺工作紙寫埋第 2 步橫式：（商）＋（餘數）＝ ？（個）！'
             },
             5: {
-                titleHtml: '橙 <span class="text-rose-600 underline">87個</span>，每7個包裝成一袋，要把所有橙包裝出售，尚欠橙多少個？',
-                readText: '要把所有橙包裝出售，他們尚欠橙多少個？',
-                level1Prompt: '🤔 偵探思考題：一袋要7個才能賣，如果現在袋子裡只有餘數個橙，要怎麼知道還差幾個才能裝滿？',
-                dividend: 87, correctDivisor: 7,
+                titleHtml: '水果店有橙 <span class="text-rose-600 underline">87個</span>，店員將橙<span class="text-sky-600 underline">每7個包裝成一袋</span>，要把所有橙包裝出售，他們<span class="bg-amber-200 px-2 py-0.5 rounded-xl text-amber-950">尚欠橙多少個</span>？',
+                readText: '第五題：水果店有橙87個，店員將橙每7個包裝成一袋，要把所有橙包裝出售，他們尚欠橙多少個？',
+                stageGuide: '一袋要裝滿 7 個橙先可以賣。請將枱面餘下嘅橙拉入去個袋度，再數下仲有幾多個虛線空位未裝滿？',
+                dividend: 87,
+                correctDivisor: 7,
                 divisorOptions: [
-                    { val: 7, text: '÷ 7', hint: '🌟 正確！' }, { val: 8, text: '÷ 8', hint: '提示：每7個包一袋。' }, { val: 6, text: '÷ 6', hint: '提示：每7個包一袋。' }
+                    { val: 6, text: '÷ 6 (個)', hint: '題目話「每 7 個包裝成一袋」，唔係 6 個呀！' },
+                    { val: 7, text: '÷ 7 (個)', hint: '非常準確！每 7 個橙一袋，所以除數係 7！' },
+                    { val: 8, text: '÷ 8 (個)', hint: '一袋係裝 7 個橙，除數係 7 先啱！' }
                 ],
-                correctHandling: 'd_minus_r', handlingFeedback: '✅ 答啱！',
-                metaReflection: '🧠 偵探反思：點解係「除數 - 餘數」？除數代表一袋需要 7 個位，減去已經有嘅餘數，剩低嘅空位就係我哋「尚欠」嘅橙啦！',
-                eqStr: '87 ÷ <span id="eq-div" class="text-rose-600">？</span> ＝ ?(袋)...?(個)'
+                equationTemplate: '87 ÷ <span id="eq-div-slot" class="px-2 py-0.5 bg-amber-200 rounded-lg text-rose-600">？</span> ＝ <span class="text-emerald-700">？(袋)</span> ... <span class="text-rose-600">？(個)</span>',
+                correctHandling: 'd_minus_r',
+                handlingFeedback: '超叻呀！全袋 7 個位（除數）減去已經放入去嘅橙（餘數），就計到尚欠幾多個橙！所以剔「除數 - 餘數」！',
+                extraTip: '⚠️ 記得喺工作紙寫埋第 2 步橫式：7 －（餘數）＝ ？（個）！'
             }
         };
 
         let currentQ = 1;
-        let earnedBadges = new Set();
+        let stampsState = [false, false, false, false];
 
+        // ==========================================
+        // 6. 切換題目與渲染版面
+        // ==========================================
         function selectQuestion(qNum) {
+            stopSpeech();
+            playSound('pickup');
             currentQ = qNum;
-            for(let i=1; i<=5; i++) {
-                document.getElementById(`tab-${i}`).className = (i===qNum) ? 'btn-3d rounded-3xl py-2 px-1 font-black flex flex-col items-center border-4 border-amber-500 bg-amber-300' : 'btn-3d rounded-3xl py-2 px-1 font-black flex flex-col items-center border-4 border-white bg-white/80';
+
+            for (let i = 1; i <= 5; i++) {
+                const tab = document.getElementById(`tab-${i}`);
+                if (i === qNum) {
+                    tab.className = 'btn-3d rounded-3xl py-2.5 px-1 font-black flex flex-col items-center justify-center border-4 border-amber-500 bg-gradient-to-b from-amber-300 to-amber-400 text-amber-950 scale-105 shadow-xl';
+                } else {
+                    tab.className = 'btn-3d rounded-3xl py-2.5 px-1 font-black flex flex-col items-center justify-center border-4 border-white bg-white/80 hover:bg-white text-slate-600';
+                }
             }
+
             const q = questions[qNum];
             document.getElementById('q-badge').textContent = `第 ${qNum} 題`;
             document.getElementById('question-text-box').innerHTML = q.titleHtml;
-            
-            // Level 1: 預設思考畫面
-            document.getElementById('interactive-stage').innerHTML = `
-                <div id="level1-box" class="flex flex-col items-center justify-center text-center h-full space-y-4">
-                    <div class="text-4xl">💭</div>
-                    <p class="text-lg font-bold text-indigo-900">${q.level1Prompt}</p>
-                    <button onclick="unlockLevel2()" class="btn-3d bg-indigo-500 text-white px-6 py-2 rounded-2xl font-black text-lg animate-bounce mt-4 shadow-lg border-2 border-indigo-700">
-                        💡 自己諗完？點擊解鎖互動圖畫！
-                    </button>
-                </div>
-                <div id="level2-tools" class="hidden w-full h-full text-center font-bold text-slate-500 pt-10">
-                    (互動拖曳組件已解鎖，請參閱原版視覺引擎進行掛載) 
-                    <br><br>👉 這裡會顯示互動硬幣/糖果等...
-                </div>
+            document.getElementById('worksheet-extra-tip').textContent = q.extraTip;
+
+            // 重設印章
+            stampsState = [false, false, false, false];
+            for (let i = 0; i < 4; i++) updateStampUI(i);
+
+            renderStage(qNum);
+            renderEquationSection(qNum);
+            renderHandlingSection(qNum);
+        }
+
+        function speakCurrentQuestion() {
+            speakText(questions[currentQ].readText);
+        }
+
+        function speakStageGuide() {
+            speakText(questions[currentQ].stageGuide);
+        }
+
+        function speakDivisorPrompt() {
+            speakText(`第${currentQ}題，${questions[currentQ].dividend}應該除以幾多呢？撳下面嘅掣揀啦！`);
+        }
+
+        function resetStage() {
+            playSound('pickup');
+            renderStage(currentQ);
+        }
+
+        // ==========================================
+        // 7. 渲染五個「拉動分物（Drag & Drop）」具體化實驗室
+        // ==========================================
+        function renderStage(qNum) {
+            const stage = document.getElementById('interactive-stage');
+            stage.innerHTML = '';
+
+            // ----------------------------------------------------
+            // 第 1 題：拉糖果平均分俾「我、哥哥、妹妹」3個人
+            // ----------------------------------------------------
+            if (qNum === 1) {
+                let counts = [0, 0, 0];
+                let remainingLoose = 5; // 模擬分到最後仲有 5 粒糖
+
+                stage.innerHTML = `
+                    <div class="text-center mb-2">
+                        <span class="inline-block bg-purple-600 text-white text-xs md:text-sm font-black px-3.5 py-1 rounded-full shadow">
+                            👇 試下將下面 5 粒糖拉俾「我、哥哥、妹妹」（每人要一樣多！）
+                        </span>
+                    </div>
+
+                    <!-- 3 個小朋友接收區 (Drop Zones) -->
+                    <div class="grid grid-cols-3 gap-2 md:gap-4 my-1">
+                        ${[
+                            { idx: 0, name: '我 (第1人)', type: 'me', color: 'sky' },
+                            { idx: 1, name: '哥哥 (第2人)', type: 'bro', color: 'emerald' },
+                            { idx: 2, name: '妹妹 (第3人)', type: 'sis', color: 'pink' }
+                        ].map(k => `
+                            <div id="kid-zone-${k.idx}" data-kid="${k.idx}" class="drop-zone bg-white rounded-3xl p-2.5 border-4 border-${k.color}-300 flex flex-col items-center shadow-md relative">
+                                <div class="text-xs md:text-sm font-black bg-${k.color}-100 text-${k.color}-900 px-2.5 py-0.5 rounded-full mb-1">${k.name}</div>
+                                <div id="kid-avatar-${k.idx}">${getKidSvg(k.type, 'happy')}</div>
+                                <div class="text-[11px] font-bold text-slate-400">已有平分糖果 +</div>
+                                <div id="kid-plate-${k.idx}" class="w-full min-h-[38px] bg-amber-50 rounded-2xl border-2 border-dashed border-amber-300 mt-1 flex items-center justify-center gap-1 p-1 flex-wrap">
+                                    <span class="text-xs font-bold text-amber-500">拉糖果嚟呢度</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <!-- 糖果托盤 -->
+                    <div class="mt-3 bg-white/90 rounded-2xl p-3 border-3 border-pink-300 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-inner">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs md:text-sm font-black text-rose-700 bg-rose-100 px-3 py-1 rounded-xl">🍬 待分糖果盤：</span>
+                            <div id="candy-pool" class="flex items-center gap-2 flex-wrap justify-center min-h-[44px]">
+                                ${[1,2,3,4,5].map(id => `
+                                    <div id="candy-${id}" class="draggable-item" title="拉我分俾小朋友">${getCandySvg()}</div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div id="q1-stage-status" class="text-xs md:text-sm font-black text-purple-800 bg-purple-100 px-3 py-1.5 rounded-xl text-center">
+                            請拉糖果俾 3 個小朋友（輕按糖果都可以！）
+                        </div>
+                    </div>
+                `;
+
+                // 綁定糖果拖放
+                stage.querySelectorAll('.draggable-item').forEach(candyEl => {
+                    makeDraggable(candyEl, (el, zone) => {
+                        // 如果只剩 2 粒，而每人都已經分咗 1 粒，再分就會唔公平！
+                        const minCount = Math.min(...counts);
+                        const maxCount = Math.max(...counts);
+
+                        // 如果學生係輕按，自動揀目前最少糖嘅小朋友
+                        let targetIdx = zone ? parseInt(zone.dataset.kid) : counts.indexOf(minCount);
+                        if (isNaN(targetIdx)) return;
+
+                        // 若已經每人 1 粒（剩低 2 粒糖唔夠分俾 3 個人）
+                        if (counts[0] === 1 && counts[1] === 1 && counts[2] === 1) {
+                            playSound('wrong');
+                            el.classList.add('shake-no');
+                            setTimeout(() => el.classList.remove('shake-no'), 500);
+                            const status = document.getElementById('q1-stage-status');
+                            status.className = 'text-xs md:text-sm font-black text-white bg-rose-500 px-3 py-1.5 rounded-xl text-center pop-in';
+                            status.innerHTML = '😮 剩低 2 粒糖唔夠平分俾 3 個人！呢啲就係<span class="underline">「餘下嘅糖果（餘數）」</span>喇！';
+                            speakText('咦！剩低呢兩粒糖唔夠平分俾3個人喎！所以佢哋就係餘下嘅糖果，即係餘數喇！');
+                            return;
+                        }
+
+                        // 防止同一個人攞第 2 粒而其他人未有
+                        if (counts[targetIdx] > minCount) {
+                            playSound('wrong');
+                            const z = document.getElementById(`kid-zone-${targetIdx}`);
+                            z.classList.add('shake-no');
+                            setTimeout(() => z.classList.remove('shake-no'), 500);
+                            speakText('要平均分，先分俾其他未有糖嘅人啦！');
+                            return;
+                        }
+
+                        // 成功放入碟
+                        playSound('drop');
+                        counts[targetIdx]++;
+                        remainingLoose--;
+                        el.dataset.locked = 'true';
+                        const plate = document.getElementById(`kid-plate-${targetIdx}`);
+                        if (counts[targetIdx] === 1) plate.innerHTML = '';
+                        el.classList.remove('draggable-item');
+                        el.classList.add('pop-in');
+                        plate.appendChild(el);
+
+                        const types = ['me', 'bro', 'sis'];
+                        document.getElementById(`kid-avatar-${targetIdx}`).innerHTML = getKidSvg(types[targetIdx], 'excited');
+
+                        if (counts[0] === 1 && counts[1] === 1 && counts[2] === 1) {
+                            playSound('correct');
+                            const status = document.getElementById('q1-stage-status');
+                            status.className = 'text-xs md:text-sm font-black text-emerald-950 bg-emerald-200 px-3 py-1.5 rounded-xl text-center pop-in';
+                            status.innerHTML = '🎉 每人分得一樣多（商）！試下再拉盤入面剩低嗰 2 粒糖睇下得唔得？';
+                            speakText('每人分得1粒喇！試下再拉盤入面剩低嗰兩粒糖，睇下夠唔夠分俾3個人？');
+                        }
+                    });
+                });
+            }
+
+            // ----------------------------------------------------
+            // 第 2 題：拉 5元硬幣買原子筆，試拉餘下 1元硬幣
+            // ----------------------------------------------------
+            else if (qNum === 2) {
+                let pensBought = 0;
+                stage.innerHTML = `
+                    <div class="text-center mb-2">
+                        <span class="inline-block bg-purple-600 text-white text-xs md:text-sm font-black px-3.5 py-1 rounded-full shadow">
+                            👇 拉「5元硬幣」去文具店買筆！再試下拉「餘下嘅1元」去買筆睇下點？
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center my-1">
+                        <!-- 子明銀包 -->
+                        <div class="bg-white rounded-3xl p-3.5 border-4 border-amber-300 shadow-md">
+                            <div class="text-xs md:text-sm font-black text-amber-900 mb-2 flex items-center justify-between">
+                                <span>👛 子明嘅銀包（拉硬幣去右邊買筆）</span>
+                            </div>
+                            <div class="space-y-2.5">
+                                <div class="bg-amber-50 p-2.5 rounded-2xl border-2 border-amber-200 flex items-center justify-around">
+                                    <span class="text-xs font-black text-amber-800">夠 5 元：</span>
+                                    <div id="coin5-1" data-value="5" class="draggable-item w-14 h-14 rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 border-4 border-amber-700 flex items-center justify-center font-black text-amber-950 shadow-md text-sm">5元</div>
+                                    <div id="coin5-2" data-value="5" class="draggable-item w-14 h-14 rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 border-4 border-amber-700 flex items-center justify-center font-black text-amber-950 shadow-md text-sm">5元</div>
+                                    <span class="text-xs font-bold text-slate-400">... (共「商」個5元)</span>
+                                </div>
+                                <div class="bg-rose-50 p-2.5 rounded-2xl border-2 border-dashed border-rose-300 flex items-center justify-between">
+                                    <span class="text-xs font-black text-rose-700">餘下嘅錢（少過5元）：</span>
+                                    <div id="coin-rem" data-value="rem" class="draggable-item bg-white px-3 py-1.5 rounded-full border-3 border-slate-400 flex items-center gap-1 shadow font-black text-xs text-slate-700">
+                                        <span>🪙1元</span><span>🪙1元</span><span>... (餘數)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文具店櫃檯 Drop Zone -->
+                        <div id="shop-zone" class="drop-zone bg-sky-50 rounded-3xl p-4 border-4 border-sky-400 flex flex-col items-center justify-center shadow-md min-h-[175px]">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-3xl">🏪</span>
+                                <span class="font-black text-sky-900 text-sm md:text-base">文具店收銀處（每枝筆售 5 元）</span>
+                            </div>
+                            <div id="pen-bag" class="w-full min-h-[68px] bg-white rounded-2xl border-2 border-dashed border-sky-300 p-2 flex items-center justify-center gap-2 flex-wrap my-1">
+                                <span class="text-xs font-bold text-sky-500">將硬幣拉嚟呢度換原子筆！</span>
+                            </div>
+                            <div id="shop-msg" class="text-xs md:text-sm font-black text-emerald-700 mt-1 text-center"></div>
+                        </div>
+                    </div>
+                `;
+
+                stage.querySelectorAll('.draggable-item').forEach(coin => {
+                    makeDraggable(coin, (el, zone) => {
+                        const val = el.dataset.value;
+                        const msg = document.getElementById('shop-msg');
+                        const bag = document.getElementById('pen-bag');
+
+                        if (val === '5') {
+                            playSound('correct');
+                            el.dataset.locked = 'true';
+                            el.remove();
+                            if (pensBought === 0) bag.innerHTML = '';
+                            pensBought++;
+                            const penWrap = document.createElement('div');
+                            penWrap.className = 'pop-in flex flex-col items-center bg-sky-100 px-2.5 py-1 rounded-xl border border-sky-300';
+                            penWrap.innerHTML = `${getPenSvg()}<span class="text-[11px] font-black text-sky-900">第 ${pensBought} 枝</span>`;
+                            bag.appendChild(penWrap);
+                            msg.className = 'text-xs md:text-sm font-black text-emerald-700 mt-1 text-center pop-in';
+                            msg.textContent = '✅ 俾咗 5 元，成功買到 1 枝原子筆！試埋拉「餘下嘅錢」睇下買唔買到？';
+                            speakText('成功用5元買到一枝原子筆！');
+                        } else {
+                            playSound('wrong');
+                            const shop = document.getElementById('shop-zone');
+                            shop.classList.add('shake-no');
+                            setTimeout(() => shop.classList.remove('shake-no'), 500);
+                            msg.className = 'text-xs md:text-sm font-black text-white bg-rose-500 px-3 py-1 rounded-xl mt-1 text-center pop-in';
+                            msg.innerHTML = '🙅‍♂️ 老闆話：「餘下嘅錢少過 5 元，唔夠買多 1 枝筆㗎！所以只要『商』！」';
+                            speakText('老闆話：餘下嘅錢少過5元，唔夠買多一枝筆㗎！所以答題處理只要商！');
+                        }
+                    });
+                });
+            }
+
+            // ----------------------------------------------------
+            // 第 3 題：拉雞蛋入「半打(6格)」盒 + 拉新盒裝餘下嘅蛋
+            // ----------------------------------------------------
+            else if (qNum === 3) {
+                let cartonCount = 0;
+                stage.innerHTML = `
+                    <div class="text-center mb-2">
+                        <span class="inline-block bg-purple-600 text-white text-xs md:text-sm font-black px-3.5 py-1 rounded-full shadow">
+                            👇 1. 先拉雞蛋入「半打」盒數下有幾格 ➡️ 2. 再拉「新盒子」裝起餘下嘅雞蛋！
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center my-1">
+                        <!-- 左：認識半打雞蛋盒 -->
+                        <div id="carton-zone" class="drop-zone bg-amber-100 rounded-3xl p-3.5 border-4 border-amber-400 flex flex-col items-center shadow-md">
+                            <div class="text-xs md:text-sm font-black text-amber-950 mb-1.5">📦 1 個「半打」雞蛋盒（有 6 格）</div>
+                            <div class="grid grid-cols-3 gap-2 bg-amber-200/80 p-2.5 rounded-2xl border-2 border-amber-400">
+                                ${[1,2,3,4,5,6].map(i => `
+                                    <div id="egg-hole-${i}" class="w-11 h-11 rounded-full bg-white/90 border-2 border-dashed border-amber-500 flex items-center justify-center text-2xl">
+                                        ${i <= 4 ? '🥚' : '<span class="text-xs font-bold text-amber-400">空位</span>'}
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="flex items-center gap-3 mt-2">
+                                <span class="text-xs font-black text-amber-900">拉呢 2 隻蛋裝滿個盒：</span>
+                                <div id="drag-egg-5" data-type="fill-carton" class="draggable-item text-3xl bg-white px-2 py-1 rounded-xl border-2 border-amber-400 shadow">🥚</div>
+                                <div id="drag-egg-6" data-type="fill-carton" class="draggable-item text-3xl bg-white px-2 py-1 rounded-xl border-2 border-amber-400 shadow">🥚</div>
+                            </div>
+                            <div id="carton-msg" class="text-xs font-black text-amber-800 mt-1">已有 4 隻，拉埋 2 隻入去睇下「半打」係幾多隻！</div>
+                        </div>
+
+                        <!-- 右：餘下的雞蛋需要 +1 個新盒 -->
+                        <div id="leftover-egg-zone" class="drop-zone bg-rose-50 rounded-3xl p-3.5 border-4 border-dashed border-rose-400 flex flex-col items-center justify-between shadow-md min-h-[185px]">
+                            <div class="text-xs md:text-sm font-black text-rose-800">⚠️ 裝滿「商」個盒之後，枱面仲有餘下嘅雞蛋（餘數）：</div>
+                            <div id="leftover-eggs-box" class="my-2 p-3 bg-white rounded-2xl border-2 border-rose-300 flex flex-col items-center">
+                                <div class="text-3xl animate-bounce">🥚🥚</div>
+                                <span class="text-xs font-black text-rose-600 mt-1">「我哋都要入盒呀！」</span>
+                            </div>
+                            <div class="flex items-center gap-2 bg-emerald-100 px-3 py-1.5 rounded-2xl border-2 border-emerald-400">
+                                <span class="text-xs font-black text-emerald-900">👉 拉呢個新盒去裝佢哋：</span>
+                                <div id="new-box-drag" data-type="new-box" class="draggable-item bg-amber-300 hover:bg-amber-400 text-amber-950 font-black px-3 py-1 rounded-xl border-2 border-amber-600 shadow text-xs flex items-center gap-1">
+                                    <span>📦</span><span>+1 新盒子</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                let filledSlots = 4;
+                stage.querySelectorAll('.draggable-item').forEach(item => {
+                    makeDraggable(item, (el, zone) => {
+                        const type = el.dataset.type;
+                        if (type === 'fill-carton') {
+                            playSound('drop');
+                            filledSlots++;
+                            el.remove();
+                            const hole = document.getElementById(`egg-hole-${filledSlots}`);
+                            if (hole) {
+                                hole.innerHTML = '🥚';
+                                hole.classList.add('pop-in', 'bg-amber-50');
+                            }
+                            const msg = document.getElementById('carton-msg');
+                            if (filledSlots === 6) {
+                                playSound('correct');
+                                msg.className = 'text-xs md:text-sm font-black text-emerald-700 mt-1 pop-in';
+                                msg.textContent = '🎉 裝滿 6 隻！「半打」即係 6 隻雞蛋（除數＝6）！';
+                                speakText('裝滿6隻喇！原來半打即係6隻雞蛋！');
+                            } else {
+                                msg.textContent = `已裝 ${filledSlots} 隻，拉埋最後 1 隻入去啦！`;
+                            }
+                        } else if (type === 'new-box') {
+                            playSound('correct');
+                            el.remove();
+                            const leftZone = document.getElementById('leftover-egg-zone');
+                            leftZone.className = 'bg-emerald-50 rounded-3xl p-3.5 border-4 border-emerald-500 flex flex-col items-center justify-center shadow-md min-h-[185px] pop-in';
+                            leftZone.innerHTML = `
+                                <div class="text-sm md:text-base font-black text-emerald-900 mb-1">📦 已加入 1 個新盒子！（商 ＋ 1）</div>
+                                <div class="bg-amber-100 p-3 rounded-2xl border-3 border-amber-500 flex items-center gap-2">
+                                    <span class="text-3xl">🥚🥚</span>
+                                    <span class="text-xs font-black text-amber-900">餘下嘅蛋都入晒盒喇！</span>
+                                </div>
+                                <div class="text-xs font-black text-emerald-700 mt-2">✅ 擺放所有雞蛋最少要：「商」＋ 1 個盒！</div>
+                            `;
+                            speakText('太好喇！用多1個新盒子裝起餘下嘅雞蛋，所有雞蛋都有盒裝喇！所以係商加1！');
+                        }
+                    });
+                });
+            }
+
+            // ----------------------------------------------------
+            // 第 4 題：拉剩餘嘅乒乓球入「其中一個籃子（星星籃子）」
+            // ----------------------------------------------------
+            else if (qNum === 4) {
+                let ballsLeft = 2;
+                stage.innerHTML = `
+                    <div class="text-center mb-2">
+                        <span class="inline-block bg-purple-600 text-white text-xs md:text-sm font-black px-3.5 py-1 rounded-full shadow">
+                            👇 請用手指將下面「剩餘的乒乓球」拉入去「⭐ 其中一個籃子」入面！
+                        </span>
+                    </div>
+
+                    <!-- 8 個籃子展示 -->
+                    <div class="grid grid-cols-4 md:grid-cols-8 gap-2 my-1">
+                        ${[1,2,3,4,5,6,7,8].map(n => `
+                            <div id="bask-${n}" class="${n === 1 ? 'drop-zone border-4 border-amber-500 bg-amber-100 ring-4 ring-amber-300/60' : 'border-2 border-slate-300 bg-white opacity-85'} rounded-2xl p-2 flex flex-col items-center justify-between text-center shadow-sm">
+                                <span class="text-[11px] font-black ${n === 1 ? 'text-amber-900 bg-amber-300 px-1.5 rounded-full' : 'text-slate-500'}">${n === 1 ? '⭐這個籃' : '籃子' + n}</span>
+                                <div class="text-2xl my-0.5">🧺</div>
+                                <div class="text-[11px] font-black bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded-lg w-full">「商」個球</div>
+                                <div id="bask-extra-${n}" class="min-h-[22px] flex items-center justify-center mt-0.5"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <!-- 剩餘乒乓球拖曳區 -->
+                    <div class="mt-3 bg-white rounded-2xl p-3 border-3 border-amber-400 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs md:text-sm font-black text-rose-700 bg-rose-100 px-3 py-1 rounded-xl">剩餘的乒乓球（餘數）：</span>
+                            <div class="flex items-center gap-2" id="rem-balls-pool">
+                                <div id="ball-1" class="draggable-item w-11 h-11 rounded-full bg-gradient-to-br from-orange-300 to-amber-500 border-3 border-amber-700 flex items-center justify-center text-xl shadow-md">🏓</div>
+                                <div id="ball-2" class="draggable-item w-11 h-11 rounded-full bg-gradient-to-br from-orange-300 to-amber-500 border-3 border-amber-700 flex items-center justify-center text-xl shadow-md">🏓</div>
+                            </div>
+                        </div>
+                        <div id="q4-status" class="text-xs md:text-sm font-black text-amber-900 bg-amber-100 px-3 py-1.5 rounded-xl">
+                            👉 拉晒啲波入去左邊第 1 個「⭐這個籃」啦！
+                        </div>
+                    </div>
+                `;
+
+                stage.querySelectorAll('.draggable-item').forEach(ball => {
+                    makeDraggable(ball, (el, zone) => {
+                        playSound('drop');
+                        el.remove();
+                        ballsLeft--;
+                        const extraBox = document.getElementById('bask-extra-1');
+                        extraBox.innerHTML = `<span class="text-xs font-black bg-rose-500 text-white px-1.5 py-0.5 rounded-lg pop-in">＋餘數</span>`;
+
+                        if (ballsLeft === 0) {
+                            playSound('correct');
+                            const st = document.getElementById('q4-status');
+                            st.className = 'text-xs md:text-sm font-black text-white bg-emerald-600 px-3 py-1.5 rounded-xl pop-in';
+                            st.innerHTML = '🎉 睇下「⭐這個籃」：有原本嘅「商」個波 ＋ 放落去嘅「餘數」個波！';
+                            speakText('睇下呢個籃子，入面有原本嘅商咁多個波，再加埋剩餘嘅餘數咁多個波，所以係商加餘數！');
+                        }
+                    });
+                });
+            }
+
+            // ----------------------------------------------------
+            // 第 5 題：拉餘下嘅橙入「7格包裝袋」，數下尚欠幾多個空位
+            // ----------------------------------------------------
+            else if (qNum === 5) {
+                let orangesInBag = 0;
+                const totalRemOranges = 3; // 示意餘下嘅橙
+
+                stage.innerHTML = `
+                    <div class="text-center mb-2">
+                        <span class="inline-block bg-purple-600 text-white text-xs md:text-sm font-black px-3.5 py-1 rounded-full shadow">
+                            👇 每袋要裝滿 7 個橙！請將下面「餘下嘅橙」拉入去包裝袋入面！
+                        </span>
+                    </div>
+
+                    <!-- 最後一袋 (7 個位) Drop Zone -->
+                    <div id="orange-bag-zone" class="drop-zone bg-amber-50 rounded-3xl p-4 border-4 border-amber-400 flex flex-col items-center shadow-md my-1">
+                        <div class="text-xs md:text-sm font-black text-amber-950 mb-2">
+                            🛍️ 最後一個包裝袋（每袋一定要裝滿 <span class="text-rose-600 underline">7 個橙 ＝ 除數</span> 先可以賣）
+                        </div>
+                        <div class="grid grid-cols-7 gap-1.5 md:gap-2.5 bg-white p-3 rounded-2xl border-2 border-amber-300 w-full max-w-xl">
+                            ${[1,2,3,4,5,6,7].map(i => `
+                                <div id="bag-slot-${i}" class="aspect-square rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center p-1">
+                                    <span class="text-[10px] font-black text-slate-400">第${i}個位</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- 待入袋嘅餘數橙 -->
+                    <div class="mt-3 bg-white rounded-2xl p-3 border-3 border-orange-300 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs md:text-sm font-black text-orange-800 bg-orange-100 px-3 py-1 rounded-xl">🍊 餘下嘅橙（餘數）：</span>
+                            <div class="flex items-center gap-2">
+                                ${[1,2,3].map(i => `
+                                    <div id="rem-orange-${i}" class="draggable-item text-3xl bg-orange-50 px-2.5 py-1 rounded-2xl border-2 border-orange-400 shadow">🍊</div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div id="q5-status" class="text-xs md:text-sm font-black text-orange-900 bg-orange-100 px-3 py-1.5 rounded-xl text-center">
+                            👉 將餘下嘅橙全部拉入上面個袋度！
+                        </div>
+                    </div>
+                `;
+
+                stage.querySelectorAll('.draggable-item').forEach(org => {
+                    makeDraggable(org, (el, zone) => {
+                        playSound('drop');
+                        orangesInBag++;
+                        el.remove();
+                        const slot = document.getElementById(`bag-slot-${orangesInBag}`);
+                        if (slot) {
+                            slot.className = 'aspect-square rounded-2xl border-3 border-orange-500 bg-orange-100 flex flex-col items-center justify-center p-1 pop-in';
+                            slot.innerHTML = `<span class="text-2xl">🍊</span><span class="text-[10px] font-black text-orange-900">已有</span>`;
+                        }
+
+                        if (orangesInBag === totalRemOranges) {
+                            playSound('correct');
+                            // 高亮剩餘的空位
+                            for (let k = totalRemOranges + 1; k <= 7; k++) {
+                                const emptySlot = document.getElementById(`bag-slot-${k}`);
+                                emptySlot.className = 'aspect-square rounded-2xl border-3 border-dashed border-rose-500 bg-rose-50 flex flex-col items-center justify-center p-1 animate-pulse';
+                                emptySlot.innerHTML = `<span class="text-lg">❓</span><span class="text-[10px] font-black text-rose-600">尚欠</span>`;
+                            }
+                            const st = document.getElementById('q5-status');
+                            st.className = 'text-xs md:text-sm font-black text-white bg-rose-600 px-3 py-1.5 rounded-xl text-center pop-in';
+                            st.innerHTML = '💡 睇下個袋：全袋 7 個位（除數）減去已有嘅橙（餘數）＝ 尚欠嘅橙！';
+                            speakText('睇下個袋！一袋有7個位，減去已經放入去嘅餘數，剩低嘅問號空位就係尚欠嘅橙喇！所以係除數減餘數！');
+                        }
+                    });
+                });
+            }
+        }
+
+        // ==========================================
+        // 8. 渲染步驟 2 (列式除數選擇) & 步驟 3 (答題處理)
+        // ==========================================
+        function renderEquationSection(qNum) {
+            const q = questions[qNum];
+            document.getElementById('equation-board').innerHTML = `
+                <div class="text-xs font-black text-emerald-700 mb-1">工作紙橫式（答案自己計）：</div>
+                <div class="text-xl md:text-2xl font-black text-slate-800 tracking-wide">${q.equationTemplate}</div>
             `;
-            
-            document.getElementById('equation-board').innerHTML = `<div class="text-xl font-black">${q.eqStr}</div>`;
-            document.getElementById('divisor-choices').innerHTML = q.divisorOptions.map((opt, i) => `<button onclick="checkDivisor(${i})" class="btn-3d bg-white border-2 border-emerald-300 rounded-xl py-2 font-black">${opt.text}</button>`).join('');
-            document.getElementById('divisor-feedback').classList.add('hidden');
-            
-            document.getElementById('handling-options').innerHTML = handlingChoices.map(hc => `<button onclick="checkHandling('${hc.id}')" id="hc-btn-${hc.id}" class="btn-3d bg-white border-2 border-slate-300 rounded-xl p-2 font-black text-sm flex items-center justify-between"><span class="text-base">☐</span> ${hc.label} <span>${hc.icon}</span></button>`).join('');
-            document.getElementById('handling-feedback').classList.add('hidden');
+
+            const choicesEl = document.getElementById('divisor-choices');
+            choicesEl.innerHTML = q.divisorOptions.map((opt, idx) => `
+                <button onclick="checkDivisor(${qNum}, ${idx})" id="div-btn-${idx}" class="btn-3d bg-white hover:bg-emerald-50 border-3 border-emerald-300 rounded-2xl py-2.5 px-2 font-black text-base md:text-lg text-slate-800">
+                    ${opt.text}
+                </button>
+            `).join('');
+
+            const fb = document.getElementById('divisor-feedback');
+            fb.classList.add('hidden');
         }
 
-        function unlockLevel2() {
-            document.getElementById('level1-box').classList.add('hidden');
-            document.getElementById('level2-tools').classList.remove('hidden');
-            speakText("圖畫已經解鎖，試下用手指拉動啦！");
-            // 這裡觸發原本的 renderStage 拖曳元素渲染邏輯
-        }
-
-        function checkDivisor(idx) {
-            const q = questions[currentQ];
+        function checkDivisor(qNum, idx) {
+            const q = questions[qNum];
             const opt = q.divisorOptions[idx];
             const fb = document.getElementById('divisor-feedback');
             fb.classList.remove('hidden');
-            if(opt.val === q.correctDivisor) {
-                fb.className = 'mt-3 p-2 rounded-2xl font-black text-sm bg-emerald-100 text-emerald-900 border-2 border-emerald-400 pop-in';
+
+            if (opt.val === q.correctDivisor) {
+                playSound('correct');
+                document.getElementById('eq-div-slot').textContent = opt.val;
+                document.getElementById('eq-div-slot').className = 'px-2.5 py-0.5 bg-emerald-500 text-white rounded-lg pop-in inline-block';
+                fb.className = 'mt-3 p-2.5 rounded-2xl font-black text-xs md:text-sm text-center bg-emerald-100 text-emerald-900 border-2 border-emerald-400 pop-in';
+                fb.textContent = '🌟 ' + opt.hint;
+                speakText(opt.hint);
             } else {
-                fb.className = 'mt-3 p-2 rounded-2xl font-black text-sm bg-amber-100 text-amber-900 border-2 border-amber-400 pop-in';
+                playSound('wrong');
+                fb.className = 'mt-3 p-2.5 rounded-2xl font-black text-xs md:text-sm text-center bg-rose-100 text-rose-900 border-2 border-rose-400 pop-in';
+                fb.textContent = '🤔 ' + opt.hint;
+                speakText(opt.hint);
             }
-            fb.innerHTML = opt.hint;
-            speakText(opt.hint.replace('🕵️‍♂️', '').replace('🌟', ''));
+        }
+
+        function renderHandlingSection(qNum) {
+            const box = document.getElementById('handling-options');
+            box.innerHTML = handlingChoices.map(hc => `
+                <button onclick="checkHandling('${hc.id}')" id="hc-btn-${hc.id}" class="btn-3d bg-white hover:bg-amber-50 border-2 border-slate-300 rounded-2xl p-2.5 font-black text-xs md:text-sm text-slate-800 flex items-center justify-between gap-2">
+                    <span class="flex items-center gap-1.5">
+                        <span class="text-base">☐</span>
+                        <span>${hc.label}</span>
+                    </span>
+                    <span class="text-base bg-slate-100 px-2 py-0.5 rounded-lg">${hc.icon}</span>
+                </button>
+            `).join('');
+
+            document.getElementById('handling-feedback').classList.add('hidden');
         }
 
         function checkHandling(choiceId) {
             const q = questions[currentQ];
             const fb = document.getElementById('handling-feedback');
             fb.classList.remove('hidden');
+            const btn = document.getElementById(`hc-btn-${choiceId}`);
+
             if (choiceId === q.correctHandling) {
-                // 觸發反思與徽章
-                fb.className = 'mt-3 p-3 rounded-2xl font-black text-sm bg-emerald-100 text-emerald-900 border-2 border-emerald-400 pop-in';
-                fb.innerHTML = `🎉 完全正確！<br><br><span class="text-indigo-800">${q.metaReflection}</span>`;
-                speakText(q.metaReflection);
-                
-                // 派發徽章
-                if(!earnedBadges.has(currentQ)) {
-                    earnedBadges.add(currentQ);
-                    const badgeEl = document.getElementById(`badge-${currentQ}`);
-                    badgeEl.classList.remove('badge-locked');
-                    badgeEl.classList.add('badge-unlocked');
-                    
-                    if(earnedBadges.size === 5) {
-                        setTimeout(() => {
-                            launchConfetti();
-                            speakText("太犀利喇！你已經收集晒5個偵探徽章，成為除法小偵探大師！");
-                        }, 1500);
-                    }
-                }
+                playSound('correct');
+                btn.className = 'btn-3d bg-emerald-500 text-white border-2 border-emerald-700 rounded-2xl p-2.5 font-black text-xs md:text-sm flex items-center justify-between gap-2';
+                fb.className = 'mt-3 p-2.5 rounded-2xl font-black text-xs md:text-sm text-center bg-emerald-100 text-emerald-900 border-2 border-emerald-400 pop-in';
+                fb.textContent = '🎉 ' + q.handlingFeedback;
+                speakText(q.handlingFeedback);
             } else {
-                // Level 3 錯誤動態引導
-                fb.className = 'mt-3 p-2 rounded-2xl font-black text-sm bg-rose-100 text-rose-900 border-2 border-rose-400 pop-in';
-                fb.innerHTML = '🕵️‍♂️ 偵探溫馨提示：方向錯了喔！請回頭看看實驗室的圖畫結果，餘數發生了什麼事？';
-                speakText("偵探溫馨提示：方向錯了喔！請回頭看看圖畫，想一想餘數發生了什麼事？");
+                playSound('wrong');
+                btn.classList.add('shake-no', 'bg-rose-50', 'border-rose-300');
+                setTimeout(() => btn.classList.remove('shake-no'), 500);
+                fb.className = 'mt-3 p-2.5 rounded-2xl font-black text-xs md:text-sm text-center bg-amber-100 text-amber-900 border-2 border-amber-400 pop-in';
+                fb.textContent = '💡 唔係呢格喎！玩多次上面步驟 1 嘅拉動圖畫，睇下餘數要點處理？';
+                speakText('唔係呢格喎！試下玩多次上面嘅拉動圖畫，睇下餘數要點樣處理啦！');
+            }
+        }
+
+        // ==========================================
+        // 9. 過關印章與紙花特效
+        // ==========================================
+        function toggleStamp(idx) {
+            playSound('drop');
+            stampsState[idx] = !stampsState[idx];
+            updateStampUI(idx);
+
+            if (stampsState.every(Boolean)) {
+                playSound('correct');
+                launchConfetti();
+                speakText('好嘢！你已經完成晒呢一題嘅4個步驟喇！');
+                const starBadge = document.getElementById(`star-${currentQ}`);
+                if (starBadge && !starBadge.textContent.includes('⭐')) {
+                    starBadge.textContent = '⭐ ' + starBadge.textContent;
+                    starBadge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-emerald-500 text-white mt-0.5 font-black';
+                }
+            }
+        }
+
+        function updateStampUI(idx) {
+            const btn = document.getElementById(`stamp-${idx}`);
+            if (!btn) return;
+            if (stampsState[idx]) {
+                btn.className = 'btn-3d bg-emerald-500 text-white border-2 border-emerald-700 rounded-2xl p-2.5 flex flex-col items-center justify-center font-black text-xs scale-105';
+            } else {
+                btn.className = 'btn-3d bg-white border-2 border-amber-400 rounded-2xl p-2.5 flex flex-col items-center justify-center text-slate-700 font-black text-xs';
             }
         }
 
         function launchConfetti() {
             const canvas = document.getElementById('confetti-canvas');
             const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            const pieces = Array.from({ length: 100 }, () => ({
-                x: Math.random() * canvas.width, y: -20 - Math.random() * 200, w: Math.random() * 10 + 6,
-                color: ['#F59E0B', '#10B981', '#3B82F6', '#EC4899', '#8B5CF6'][Math.floor(Math.random()*5)],
-                vy: Math.random() * 4 + 3, vx: Math.random() * 4 - 2, angle: Math.random() * 360
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const pieces = Array.from({ length: 75 }, () => ({
+                x: Math.random() * canvas.width,
+                y: -20 - Math.random() * 200,
+                w: Math.random() * 10 + 6,
+                h: Math.random() * 10 + 6,
+                color: ['#F59E0B', '#10B981', '#3B82F6', '#EC4899', '#8B5CF6'][Math.floor(Math.random() * 5)],
+                vy: Math.random() * 4 + 3,
+                vx: Math.random() * 4 - 2,
+                angle: Math.random() * 360
             }));
+
+            let f = 0;
             function frame() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 pieces.forEach(p => {
                     p.y += p.vy; p.x += p.vx; p.angle += 6;
-                    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((p.angle * Math.PI) / 180);
-                    ctx.fillStyle = p.color; ctx.fillRect(-p.w/2, -p.w/2, p.w, p.w); ctx.restore();
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.angle * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    ctx.restore();
                 });
-                requestAnimationFrame(frame);
+                if (++f < 110) requestAnimationFrame(frame);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
             frame();
         }
-
-        function speakCurrentQuestion() { speakText(questions[currentQ].readText); }
-        function stopSpeech() { window.speechSynthesis.cancel(); }
 
         window.onload = () => selectQuestion(1);
     </script>
